@@ -2395,6 +2395,17 @@ function _civicrm_core_data(&$data, $enabled) {
     ),
   );
 
+  $data['civicrm_group_contact']['domain_id'] = array(
+    'title' => t('Domain Contact using ACL'),
+    'help' => t('Filter contact using acl for current domain'),
+    'field' => array(
+      'handler' => 'civicrm_handler_filter_groupdomain',
+    ),
+    'filter' => array(
+      'handler' => 'civicrm_handler_filter_groupdomain',
+      'allow empty' => TRUE,
+    ),
+  );
   //CiviCRM Groups - FIELDS
 
   //Numeric Group ID
