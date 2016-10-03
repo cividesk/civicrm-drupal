@@ -73,6 +73,19 @@ function _civicrm_event_data(&$data, $enabled) {
     ),
   );
 
+  // Domain ID
+  $data['civicrm_event']['domain_id'] = array(
+    'title' => t('Event Domain ID'),
+    'help' => t('Filter contact using current domain'),
+    'field' => array(
+      'handler' => 'civicrm_handler_filter_domain',
+    ),
+    'filter' => array(
+      'handler' => 'civicrm_handler_filter_domain',
+      'allow empty' => TRUE,
+    ),
+  );
+
   //Event Type
   $data['civicrm_event']['event_type'] = array(
     'title' => t('Event Type'),
