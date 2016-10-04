@@ -27,83 +27,76 @@
  * Field hanlder to allow filtering by CiviCRM domain.
  */
 class civicrm_handler_filter_systemdomain extends views_handler_filter_in_operator {
-  static $_domainName = NULL;
-  static $_aclCache = NULL;
+  static $_domainList = array();
 
-  // Prepare Chapter list
   function construct() {
     parent::construct();
-    if (!self::$_domainName) {
-      if (!civicrm_initialize()) {
-        return;
-      }
+    if (!civicrm_initialize()) {
+      return;
+    }
+    if (!self::$_domainList) {
+      $options = array();
+      $options['0'] = 'Current Chapter';
+
       $result = civicrm_api3('Domain', 'get', array(
         'return' => "id,name,description",
       ));
 
-      $options = array();
-      $options['0'] = 'Current Chapter';
       foreach ($result['values'] as $id => $value ) {
-        $chapter = explode('-',$value['description']); // 'Arcs Foundation -' not required in drop down list
+        $chapter = explode('-',$value['description']);
         if (!empty(trim($chapter['1']))) {
-         $chapterName = trim($chapter['1']);
+          $chapterName = trim($chapter['1']);
         } else {
           $chapterName = $chapter['0'];
         }
-        $chapterName = str_replace('Chapter', '', $chapterName); // removed 'Chapter' from name
-        $options[$id] = $chapterName;
+        $chapterName = str_replace('Chapter', '', $chapterName);
+        $options[$id] = $chapterName;//$value['description'];
       }
-      self::$_domainName = $options;
+      self::$_domainList = $options;
     }
   }
-  // called when form submitted
+
   function query() {
-     if (!empty($this->value)) {
-       $domainID = reset($this->value);
-       // Current Domain have 0 value in select list
-       if ($domainID == '0') {
-         $domainID = CRM_Core_Config::domainID();
-       }
-       $acl = civicrm_handler_filter_systemdomain::getAclClause($domainID);
-       if (!empty($acl)) {
-         $this->query->add_where_expression(0, $acl);
-       }
-     }
+    if (!empty($this->value)) {
+      $domainID = reset($this->value);
+      // Current Domain have 0 value in select list
+      if ($domainID == '0') {
+        $domainID = CRM_Core_Config::domainID();
+      }
+      $aclClause = self::getAclClause($domainID);
+      if (!empty($aclClause)) {
+        $this->ensure_my_table();
+        $this->query->add_where_expression(0, $aclClause);
+      }
+    }
   }
 
   public static function getAclClause($domainID) {
-    if (! self::$_aclCache ) {
-      $groupID = civicrm_api3('Setting', 'getvalue', array(
-        'sequential' => 1,
-        'domain_id' => $domainID,
-        'name' => "domain_group_id",
-      ));
-      if (empty($groupID)) {
-        return '';
-      }
+    $aclClause = '';
+    $groupID = civicrm_api3('Setting', 'getvalue', array(
+      'sequential' => 1,
+      'domain_id' => $domainID,
+      'name' => "domain_group_id",
+    ));
+    if (!empty($groupID)) {
+      // Lines below adapted from multisite_civicrm_aclWhereClause() in org.civicrm.multisite
       $childOrganizations = _multisite_get_all_child_groups($groupID);
       if (!empty($childOrganizations)) {
         $groupTable = 'civicrm_group_contact';
-        $groupTableAlias = 'civicrm_group_contact';
-        $deletedContactClause = CRM_Core_Permission::check('access deleted contacts') ? '' : 'AND civicrm_contact.is_deleted = 0';
-        $aclWhere = "(civicrm_group_contact.group_id IN (" . implode(',', $childOrganizations) . ") AND {$groupTableAlias}.status IN ('Added') $deletedContactClause)";
+        $aclClause = "{$groupTable}.group_id IN (" . implode(',', $childOrganizations) . ") AND {$groupTable}.status IN ('Added')";
       }
-      self::$_aclCache = $aclWhere;
     }
-    return self::$_aclCache;
+    return $aclClause;
   }
 
   function get_value_options() {
     if (!isset($this->value_options)) {
       $this->value_title = t('Domain Name');
       $options = array();
-      foreach (self::$_domainName as $id => $name) {
+      foreach (self::$_domainList as $id => $name) {
         $options[$id] = $name;
       }
       $this->value_options = $options;
     }
   }
 }
-  
-
-

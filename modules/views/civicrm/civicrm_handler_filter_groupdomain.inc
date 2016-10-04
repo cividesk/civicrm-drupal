@@ -27,7 +27,7 @@
  * Field hanlder to allow filtering by CiviCRM domain.
  */
 class civicrm_handler_filter_groupdomain extends views_handler_filter_numeric {
-  static $_aclCache = NULL;
+
   /**
    * Add an additonal operator which takes no arguments to the existing list provided by views_handler_filter_numeric.
    */
@@ -49,20 +49,21 @@ class civicrm_handler_filter_groupdomain extends views_handler_filter_numeric {
     if (!civicrm_initialize()) {
       return FALSE;
     }
-    $acl = civicrm_handler_filter_groupdomain::getAclClause();
-    $this->query->add_where_expression(0, $acl['aclWhereClause']);
-  }
-  public static function getAclClause() {
-    if (! self::$_aclCache ) { 
-      $acl=  new CRM_Contact_BAO_Query();
-      $acl->generatePermissionClause(false, true);
-      //$aclFrom  = CRM_Utils_Array::value('civicrm_group_contact', $acl->_whereTables);
-      $aclFrom  = CRM_Utils_Array::value('multisiteGroupTable', $acl->_whereTables);
-      $aclWhere = $acl->_permissionWhereClause ;
-      $aclWhere = str_replace('multisiteGroupTable', 'civicrm_group_contact', $aclWhere);
-      $aclWhere = str_replace('contact_a', 'civicrm_contact', $aclWhere);
-      self::$_aclCache = array('aclFromClause' => $aclFrom, 'aclWhereClause' => $aclWhere);
+    $aclClause = self::getAclClause();
+    if (!empty($aclClause)) {
+      $this->ensure_my_table();
+      $this->query->add_where_expression(0, $aclClause);
     }
-    return self::$_aclCache;
+  }
+
+  public static function getAclClause() {
+    // Get ACL clause from CiviCRM functions
+    $acl = new CRM_Contact_BAO_Query();
+    $acl->generatePermissionClause(false, true);
+    $aclClause = $acl->_permissionWhereClause ;
+    // Adapt to our context
+    $aclClause = str_replace('multisiteGroupTable', 'civicrm_group_contact', $aclClause);
+    $aclClause = str_replace('contact_a', 'civicrm_contact', $aclWhere);
+    return aclClause;
   }
 }
