@@ -2406,6 +2406,19 @@ function _civicrm_core_data(&$data, $enabled) {
       'allow empty' => TRUE,
     ),
   );
+  
+  $data['civicrm_group_contact']['system_domain_id'] = array(
+    'title' => t('Contacts for Domain'),
+    'help' => t('Filter contact using acl for specified domain'),
+    'field' => array(
+      'handler' => 'civicrm_handler_filter_systemdomain',
+    ),
+    'filter' => array(
+      'handler' => 'civicrm_handler_filter_systemdomain',
+      'allow empty' => TRUE,
+    ),
+  );
+  
   //CiviCRM Groups - FIELDS
 
   //Numeric Group ID
