@@ -76,7 +76,7 @@ function _civicrm_event_data(&$data, $enabled) {
   // Domain ID
   $data['civicrm_event']['domain_id'] = array(
     'title' => t('Event Domain ID'),
-    'help' => t('Filter contact using current domain'),
+    'help' => t('Domain the Event is defined in'),
     'field' => array(
       'handler' => 'civicrm_handler_filter_domain',
     ),
