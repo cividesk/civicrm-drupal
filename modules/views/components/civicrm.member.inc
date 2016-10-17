@@ -27,6 +27,7 @@
  * Build the $data array for CiviMember related tables
  * Includes the following tables
  * civicrm_membership
+ * civicrm_membership_type
  */
 function _civicrm_member_data(&$data, $enabled) {
   //----------------------------------------------------------------
@@ -34,7 +35,7 @@ function _civicrm_member_data(&$data, $enabled) {
   //----------------------------------------------------------------
 
 
-  $data['civicrm_membership']['table']['group'] = t('CiviCRM Member');
+  $data['civicrm_membership']['table']['group'] = t('CiviCRM Memberships');
 
   $data['civicrm_membership']['table']['base'] = array(
     // Governs the whole mozilla
@@ -48,6 +49,11 @@ function _civicrm_member_data(&$data, $enabled) {
       'left_field' => 'id',
       'field' => 'contact_id',
     ),
+    // Directly links to membership_type table
+    'civicrm_membership_type' => array(
+      'left_field' => 'id',
+      'field' => 'membership_type_id',
+    ),
   );
 
   //Display Memberships in User Views
@@ -57,7 +63,21 @@ function _civicrm_member_data(&$data, $enabled) {
     'field' => 'contact_id',
   );
 
+  $data['civicrm_membership_type']['table']['group'] = t('CiviCRM Membership Types');
 
+  $data['civicrm_membership_type']['table']['base'] = array(
+    // Governs the whole mozilla
+    'field' => 'id',
+    'title' => t('CiviCRM Membership Types'),
+    'help' => t("View displays CiviCRM Membership Types."),
+  );
+  $data['civicrm_membership_type']['table']['join'] = array(
+    // Directly links to membership table
+    'civicrm_membership' => array(
+      'left_field' => 'membership_type_id',
+      'field' => 'id',
+    ),
+  );
 
   //CiviCRM Memberships - FIELDS
 
@@ -175,7 +195,7 @@ function _civicrm_member_data(&$data, $enabled) {
     ));
 
 
-  //membership Source
+  //Membership Source
   $data['civicrm_membership']['source'] = array(
     'title' => t('Source'),
     'help' => t('Source of the relationship'),
@@ -259,8 +279,6 @@ function _civicrm_member_data(&$data, $enabled) {
       'name' => 'reminder_date',
     ));
 
-
-
   //Numeric Membership Owner ID
   $data['civicrm_membership']['owner_membership_id'] = array(
     'title' => t('Membership Owner ID'),
@@ -318,6 +336,7 @@ function _civicrm_member_data(&$data, $enabled) {
       'handler' => 'views_handler_sort',
     ),
   );
+
   // Link to Campaign Table
   if (isset($enabled['CiviCampaign'])) {
     $data['civicrm_membership']['campaign_id'] = array(
@@ -331,5 +350,93 @@ function _civicrm_member_data(&$data, $enabled) {
       ),
     );
   }
-}
 
+  //CiviCRM Membership Type - FIELDS
+
+  //Numeric Membership Type ID
+  $data['civicrm_membership_type']['id'] = array(
+    'title' => t('Membership Type ID'),
+    'help' => t('The numeric ID of the Membership Type'),
+    'field' => array(
+      'handler' => 'views_handler_field_numeric',
+      'click sortable' => TRUE,
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_numeric',
+      'numeric' => TRUE,
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_numeric',
+      'allow empty' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+  );
+
+  //Membership Type
+  $data['civicrm_membership_type']['name'] = array(
+    'title' => t('Membership Type Name'),
+    'help' => t('The Membership Type Name'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_string',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_string',
+      'allow empty' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+  );
+
+  //Membership Type Domain
+  $data['civicrm_membership_type']['domain'] = array(
+    'title' => t('Membership Type Domain'),
+    'real field' => 'domain_id',
+    'help' => t('Membership Type Domain'),
+    'field' => array(
+      'handler' => 'civicrm_handler_field_pseudo_constant',
+      'click sortable' => TRUE,
+      'pseudo class' => 'CRM_Core_PseudoConstant',
+      'pseudo method' => 'domain',
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument',
+    ),
+    'filter' => array(
+      'handler' => 'civicrm_handler_filter_pseudo_constant',
+      'allow empty' => TRUE,
+      'pseudo class' => 'CRM_Core_PseudoConstant',
+      'pseudo method' => 'domain',
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+  );
+
+  //Membership Type Description
+  $data['civicrm_membership_type']['description'] = array(
+    'title' => t('Membership Type Description'),
+    'help' => t('The Membership Type Description'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_string',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_string',
+      'allow empty' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+  );
+
+}
