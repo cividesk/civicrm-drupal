@@ -409,10 +409,7 @@ function _civicrm_member_data(&$data, $enabled) {
       'handler' => 'views_handler_argument',
     ),
     'filter' => array(
-      'handler' => 'civicrm_handler_filter_pseudo_constant',
-      'allow empty' => TRUE,
-      'pseudo class' => 'CRM_Core_PseudoConstant',
-      'pseudo method' => 'domain',
+      'handler' => 'civicrm_handler_filter_membership_domain',
     ),
     'sort' => array(
       'handler' => 'views_handler_sort',
