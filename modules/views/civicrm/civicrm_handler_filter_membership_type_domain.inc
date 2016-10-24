@@ -23,10 +23,10 @@
  +--------------------------------------------------------------------+
 */
 
-class civicrm_handler_filter_membership_domain extends views_handler_filter_in_operator {
+class civicrm_handler_filter_membership_type_domain extends views_handler_filter_in_operator {
   function get_value_options() {
     if (!isset($this->value_options)) {
-      $this->value_title = t('Membership Domain');
+      $this->value_title = t('Membership Type Domain');
       $options = array(
         '0' => '- Current Domain -',
       );
@@ -35,6 +35,18 @@ class civicrm_handler_filter_membership_domain extends views_handler_filter_in_o
         $options[$id] = $name;
       }
       $this->value_options = $options;
+    }
+  }
+
+  function query() {
+    if (!empty($this->value)) {
+      // Replace value 0 with current CiviCRM domain
+      foreach ($this->value as &$domain) {
+        if ($domain == '0') {
+          $domain = CRM_Core_Config::domainID();
+        }
+      }
+      parent::query();
     }
   }
 }
