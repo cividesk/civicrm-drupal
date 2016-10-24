@@ -63,7 +63,7 @@ class civicrm_handler_filter_groupdomain extends views_handler_filter_numeric {
     $aclClause = $acl->_permissionWhereClause ;
     // Adapt to our context
     $aclClause = str_replace('multisiteGroupTable', 'civicrm_group_contact', $aclClause);
-    $aclClause = str_replace('contact_a', 'civicrm_contact', $aclWhere);
+    $aclClause = str_replace('contact_a', 'civicrm_contact', $aclClause);
     return $aclClause;
   }
 }
