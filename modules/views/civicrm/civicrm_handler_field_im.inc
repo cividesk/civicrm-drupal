@@ -24,55 +24,55 @@
  */
 
 /**
- * Field handler to provide relationship to CiviCRM email.
+ * Field handler for Instant Messaging field
  *
- * @ingroup civicrm_relationship_handlers
+ * @ingroup civicrm_field_handlers
  */
-class civicrm_handler_relationship_phone extends civicrm_handler_relationship_location {
+class civicrm_handler_field_im extends civicrm_handler_field_location {
+  static $_provider;
 
-  static $_phoneType;
   public function construct() {
     parent::construct();
-    if (!self::$_phoneType) {
+    if (!self::$_provider) {
       if (!civicrm_initialize()) {
         return;
       }
-      self::$_phoneType = CRM_Core_PseudoConstant::get('CRM_Core_DAO_Phone', 'phone_type_id');
+      self::$_provider = CRM_Core_PseudoConstant::get('CRM_Core_DAO_IM', 'provider_id');
     }
   }
 
   public function option_definition() {
     $options = parent::option_definition();
-    $options['phone_type'] = array('default' => 0);
+    $options['provider'] = array('default' => 0);
     return $options;
   }
 
   public function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
-    $phoneOptions = array(0 => 'Any');
-    foreach (self::$_phoneType as $id => $type) {
-      $phoneOptions[$id] = $type;
+    $imOptions = array(0 => 'Any');
+    foreach (self::$_provider as $id => $type) {
+      $imOptions[$id] = $type;
     }
-    $form['phone_type'] = array(
+    $form['provider'] = array(
       '#type' => 'radios',
-      '#title' => 'Phone type for this relationship',
-      '#options' => $phoneOptions,
-      '#description' => t('Phone type to be used for this relationship'),
-      '#default_value' => $this->options['phone_type'],
+      '#title' => 'Instant Messaging provider for this field',
+      '#options' => $imOptions,
+      '#description' => t('Instant Messaging provider to be displayed for this field'),
+      '#default_value' => $this->options['provider'],
       '#fieldset' => 'location_choices',
     );
   }
 
-  public function join_phone($join = array()) {
+  public function join_im($join = array()) {
     $extra = array();
     if (isset($join->extra)) {
       $extra = $join->extra;
     }
-    if (isset($this->options['phone_type']) && $this->options['phone_type']) {
+    if (isset($this->options['provider']) && $this->options['provider']) {
       $extra[] = array(
-        'value' => $this->options['phone_type'],
+        'value' => $this->options['provider'],
         'numeric' => TRUE,
-        'field' => 'phone_type_id',
+        'field' => 'provider_id',
         'operator' => '=',
       );
     }
@@ -84,23 +84,26 @@ class civicrm_handler_relationship_phone extends civicrm_handler_relationship_lo
 
   public function get_join() {
     $join = parent::get_join();
-    $join = $this->join_phone($join);
+    $join = $this->join_im($join);
     return $join;
   }
 
-  /**
-   * Called to implement a relationship in a query.
-   */
-  public function query() {
-    $join = $this->get_join();
-    $this->alias = $this->query->add_table($this->table, $this->relationship, $join);
-    //register relationship
-    $this->view->relationship[$this->options['id']]->alias = $this->alias;
-    $this->query->relationships[$this->alias] = array(
-      'link' => $this->relationship,
-      'table' => $this->table,
-      'base' => $this->table,
-    );
+  public function ensure_my_table() {
+    if (!isset($this->table_alias)) {
+      if (!method_exists($this->query, 'ensure_table')) {
+        vpr_trace();
+        exit;
+      }
+      $join = $this->get_join();
+      if (empty($this->relationship)) {
+        //https://www.drupal.org/node/2617032
+        $this->table_alias = $this->query->add_table($this->table, $this->relationship, $join);
+      }
+      else {
+        $this->table_alias = $this->query->ensure_table($this->table, $this->relationship, $join);
+      }
+    }
+    return $this->table_alias;
   }
 
 }

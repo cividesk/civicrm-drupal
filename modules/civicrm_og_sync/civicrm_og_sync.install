@@ -32,65 +32,61 @@
  * $Id$
  *
  */
-require_once 'civicrm_rules_utils.inc';
-require_once 'civicrm_rules.contact-eval.inc';
-require_once 'civicrm_rules.mailing-eval.inc';
-require_once 'civicrm_rules.event-eval.inc';
-require_once 'civicrm_rules.participant-eval.inc';
 
 /**
- * Implements hook_rules_file_info().
+ * Implemenation of hook_enable.  Use to synchronise with pre-existing groups
  */
-function civicrm_rules_rules_file_info() {
-  return array(
-    'civicrm_rules.contact-eval',
-    'civicrm_rules.mailing-eval',
-    'civicrm_rules.event-eval',
-    'civicrm_rules.participant-eval',
-  );
-}
+function civicrm_og_sync_enable() {
+  db_query("UPDATE {system} SET weight = 110 WHERE name = 'civicrm_og_sync'");
 
-/**
- * Implements hook_rules_event_info().
- */
-function civicrm_rules_rules_event_info() {
-  require_once 'civicrm_rules_event.inc';
-  return civicrm_rules_get_event();
-}
-
-function civicrm_rules_rules_condition_info() {
-  require_once 'civicrm_rules_condition.inc';
-  return civicrm_rules_get_condition();
-}
-
-/**
- * CiviCRM integration access callback.
- */
-function civicrm_rules_rules_integration_access($type, $name) {
-  if ($type == 'event' || $type == 'condition') {
-    return user_access('access CiviCRM');
+  if (!civicrm_initialize()) {
+    return;
   }
-}
 
-/**
- * CiviCRM integration admin access callback.
- */
-function civicrm_rules_rules_admin_access() {
-  return user_access('administer CiviCRM');
-}
+  if (function_exists('og_get_group_ids')) {
+    $ogGroupIds = og_get_group_ids('node');
+  }
+  else {
+    $ogGroupIds = og_get_all_group('node');
+  }
 
-/**
- * Implements hook_rules_action_info().
- */
-function civicrm_rules_rules_action_info() {
-  require_once 'civicrm_rules_action.inc';
-  return civicrm_rules_get_action();
-}
+  // FIX ME
+  $subscribers = array();
+  // $subscribers = og_get_group_ids('user');
 
-/**
- * Implements hook_rules_data_type_info().
- */
-function civicrm_rules_rules_data_info() {
-  require_once 'civicrm_rules_entity.inc';
-  return civicrm_rules_get_entity();
+  foreach ($ogGroupIds as $nid => $gid) {
+    $node = node_load($gid);
+    $title = trim($node->title);
+    // length of 49 so that the admin group can fit ': administrator' afterwards within 64 char field
+    $params = array(
+      'name' => substr(trim($title), 0, 49),
+      'title' => $title,
+      'is_active' => 1,
+      'og_id' => $gid,
+    );
+
+    _civicrm_og_sync_skip_process_request(TRUE);
+
+    // add the group
+    require_once 'CRM/Bridge/OG/Drupal.php';
+    CRM_Bridge_OG_Drupal::nodeapi($params, 'add');
+
+    // add the subscribers
+    foreach ($subscribers as $uid) {
+      $is_admin = FALSE;
+      if ($uid == $node->uid) {
+        $is_admin = TRUE;
+      }
+
+      $addToGroupParams = array(
+        'og_id' => $gid,
+        'uf_id' => $uid,
+        'is_active' => 1,
+        'is_admin' => $is_admin,
+      );
+
+      // add contact in group
+      CRM_Bridge_OG_Drupal::og($addToGroupParams, 'add');
+    }
+  }
 }

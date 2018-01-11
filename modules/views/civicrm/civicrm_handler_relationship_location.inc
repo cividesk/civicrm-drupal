@@ -21,7 +21,7 @@
  | GNU Affero General Public License or the licensing of CiviCRM,     |
  | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
  +--------------------------------------------------------------------+
-*/
+ */
 
 /**
  * Field handler to provide relationship to CiviCRM email.
@@ -34,7 +34,7 @@ class civicrm_handler_relationship_location extends views_handler_relationship {
   static $_locationOps;
   static $location_op;
 
-  function construct() {
+  public function construct() {
     parent::construct();
     if (!self::$_locationTypes) {
       if (!civicrm_initialize()) {
@@ -46,7 +46,7 @@ class civicrm_handler_relationship_location extends views_handler_relationship {
     }
   }
 
-  function option_definition() {
+  public function option_definition() {
     $options = parent::option_definition();
     $options['location_type'] = array('default' => 0);
     $options['location_op'] = array('default' => 0);
@@ -54,7 +54,7 @@ class civicrm_handler_relationship_location extends views_handler_relationship {
     return $options;
   }
 
-  function options_form(&$form, &$form_state) {
+  public function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
 
     $locationOptions = array(0 => 'Any');
@@ -105,8 +105,7 @@ class civicrm_handler_relationship_location extends views_handler_relationship {
     );
   }
 
-
-  function location_extras() {
+  public function location_extras() {
     $extra = array();
     if (!empty($this->options['location_type'])) {
       $extra[] = array(
@@ -127,13 +126,43 @@ class civicrm_handler_relationship_location extends views_handler_relationship {
     return $extra;
   }
 
+
+  public function join_required($join = array()) {
+    if (!empty($this->options['required'])) {
+      $join->type = 'INNER';
+    }
+    return $join;
+  }
+
+  public function join_location($join = array()) {
+    $extra = array();
+    if (isset($join->extra)) {
+      $extra = $join->extra;
+    }
+    $extra = array_merge($extra, $this::location_extras());
+    if (!empty($extra)) {
+      $join->extra = $extra;
+    }
+    $join->extra_type = self::$_locationOps[$this->options['location_op']];
+    return $join;
+  }
+
+  public function get_join() {
+    $join = parent::get_join();
+    $join = $this->join_required($join);
+    $join = $this->join_location($join);
+    return $join;
+  }
+
   /**
    * Called to implement a relationship in a query.
    */
-  function query() {
-    // Just ensure the one table. This is briefer than parent::query(), which
-    // attempts to create an additional join.
-    $this->ensure_my_table();
+  public function query() {
+    $join = $this->get_join();
+    $this->alias = $this->query->add_table($this->table, $this->relationship, $join);
+    //register relationship
+    $this->view->relationship[$this->options['id']]->alias = $this->alias;
+    $this->alias = $this->table_alias;
   }
-}
 
+}

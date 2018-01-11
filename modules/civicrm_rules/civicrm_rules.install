@@ -3,6 +3,8 @@
  +--------------------------------------------------------------------+
  | CiviCRM version 4.7                                                |
  +--------------------------------------------------------------------+
+ | Copyright CiviCRM LLC (c) 2004-2017                                |
+ +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
  | CiviCRM is free software; you can copy, modify, and distribute it  |
@@ -24,23 +26,16 @@
  */
 
 /**
- * Field handler to provide relationship to Drupal User ID
  *
- * @ingroup civicrm_field_handlers
+ * @package CRM
+ * @copyright CiviCRM LLC (c) 2004-2017
+ * $Id$
+ *
  */
-class civicrm_handler_field_drupalid extends views_handler_field {
-  public function construct() {
-    parent::construct();
-    if (!civicrm_initialize()) {
-      return;
-    }
-    require_once 'CRM/Core/BAO/UFMatch.php';
-  }
 
-  public function render($values) {
-    $cid = $values->{$this->field_alias};
-    $uf_id = CRM_Core_BAO_UFMatch::getUFId($cid);
-    return $uf_id;
-  }
-
+/**
+ * Implements hook_enable().
+ */
+function civicrm_rules_enable() {
+  db_query("UPDATE {system} SET weight = 110 WHERE name = 'civicrm_rules'");
 }
