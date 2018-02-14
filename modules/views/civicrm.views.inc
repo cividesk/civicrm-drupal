@@ -443,7 +443,8 @@ function civicrm_views_get_join_table($entity_type) {
 
     case "Membership":
       return 'civicrm_membership';
-
+    case "Membership Type":
+      return 'civicrm_membership_type';
     case "Grant":
       return 'civicrm_grant';
 
