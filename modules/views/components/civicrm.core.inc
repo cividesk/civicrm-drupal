@@ -2721,6 +2721,11 @@ function _civicrm_core_data(&$data, $enabled) {
     'field' => 'contact_id',
   );
 
+  $data['civicrm_group_contact']['table']['join']['civicrm_grant'] = array(
+    // Directly links to group table
+    'left_field' => 'contact_id',
+    'field' => 'contact_id',
+  );
   $data['civicrm_group_contact']['table']['group'] = t('CiviCRM Groups');
   $data['civicrm_group_status']['table']['group'] = t('Contact Group Status');
 
