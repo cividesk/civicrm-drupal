@@ -48,7 +48,7 @@ function civicrm_user_login(&$edit, $user) {
     return;
   }
   return CRM_Core_BAO_UFMatch::synchronize($user, FALSE, 'Drupal',
-    civicrm_get_ctype('Individual')
+    civicrm_get_ctype('Individual'), TRUE
   );
 }
 
